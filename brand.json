@@ -1,0 +1,54 @@
+{
+  "font": {
+    "family": "Montserrat-Bold",
+    "style": "uppercase",
+    "primary_size": 90,
+    "subtitle_size": 40,
+    "color": "#FFFFFF",
+    "subtitle_color": "#CCCCCC"
+  },
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "base_color": "#0a0a1a"
+  },
+  "presets": {
+    "focus": {
+      "name": "Focus / ADHD",
+      "accent": "#00E5CC",
+      "accent_secondary": "#FFB830",
+      "background_tint": "#0a1a2a",
+      "text_glow_color": "#00E5CC"
+    },
+    "sleep": {
+      "name": "Sleep / Relaxation",
+      "accent": "#4A6CF7",
+      "accent_secondary": "#8B5CF6",
+      "background_tint": "#0a0a2e",
+      "text_glow_color": "#4A6CF7"
+    },
+    "meditation": {
+      "name": "Meditation / Healing",
+      "accent": "#A855F7",
+      "accent_secondary": "#FFD700",
+      "background_tint": "#1a0a2e",
+      "text_glow_color": "#A855F7"
+    }
+  },
+  "layout": {
+    "text_safe_margin": 80,
+    "text_position": "center",
+    "avoid_bottom_right": true,
+    "subtitle_gap": 20
+  },
+  "effects": {
+    "text_glow": true,
+    "text_glow_radius": 8,
+    "text_shadow": true,
+    "text_shadow_offset": [4, 4],
+    "text_shadow_color": "#000000",
+    "vignette": true,
+    "vignette_strength": 0.6,
+    "gradient_overlay": true
+  }
+}
