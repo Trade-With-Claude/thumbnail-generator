@@ -10,14 +10,17 @@ def render_thumbnail(
     preset_name: str = "focus",
     output_path: str | Path = "output/thumbnail.png",
     config: dict | None = None,
+    theme: str | None = None,
+    background: str | None = None,
+    seed: int | None = None,
 ) -> Path:
-    """Render a thumbnail with text effects, vignette, and gradient overlay.
+    """Render a thumbnail with theme background, text effects, vignette, and gradient.
 
-    Pipeline: dark canvas → gradient overlay → vignette → text (shadow → glow → main)
+    Pipeline: dark canvas → theme/background → gradient overlay → vignette → text
     """
-    # Lazy imports to avoid circular dependency
     from thumbgen.text import draw_title
     from thumbgen.effects import apply_vignette, apply_gradient_overlay
+    from thumbgen.themes import load_theme_background, load_custom_background, blend_background
 
     if config is None:
         config = load_brand_config()
@@ -35,7 +38,15 @@ def render_thumbnail(
     bg_color = _hex_to_rgb(preset["background_tint"])
     img = Image.new("RGB", (width, height), bg_color)
 
-    # 2. Apply gradient overlay (subtle colored gradient from bottom)
+    # 2. Apply theme or custom background
+    if background:
+        bg_img = load_custom_background(background, (width, height))
+        img = blend_background(img, bg_img, opacity=0.7)
+    elif theme:
+        bg_img = load_theme_background(theme, preset, (width, height), seed=seed)
+        img = blend_background(img, bg_img, opacity=0.8)
+
+    # 3. Apply gradient overlay (subtle colored gradient from bottom)
     if effects_cfg.get("gradient_overlay", False):
         img = apply_gradient_overlay(
             img,
@@ -44,7 +55,7 @@ def render_thumbnail(
             direction="bottom",
         )
 
-    # 3. Apply vignette (darken edges)
+    # 4. Apply vignette (darken edges)
     if effects_cfg.get("vignette", False):
         strength = effects_cfg.get("vignette_strength", 0.6)
         img = apply_vignette(img, strength=strength)
