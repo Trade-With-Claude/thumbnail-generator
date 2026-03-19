@@ -83,8 +83,22 @@ def _generate_brain_theme(
     img = Image.new("RGBA", size, (*bg_tint, 255))
     draw = ImageDraw.Draw(img)
 
-    # Generate neural nodes
+    # Generate neural nodes — dense network
     nodes = []
+    # Cluster more nodes toward center for a brain-like density
+    for _ in range(80):
+        # 60% of nodes clustered in center region
+        if random.random() < 0.6:
+            x = random.gauss(width // 2, width // 4)
+            y = random.gauss(height // 2, height // 4)
+            x = max(0, min(width, int(x)))
+            y = max(0, min(height, int(y)))
+        else:
+            x = random.randint(0, width)
+            y = random.randint(0, height)
+        nodes.append((x, y))
+
+    # Additional smaller scatter nodes for density
     for _ in range(60):
         x = random.randint(0, width)
         y = random.randint(0, height)
@@ -96,50 +110,75 @@ def _generate_brain_theme(
             if i >= j:
                 continue
             dist = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-            if dist < 250:
-                alpha = int(max(0, (1 - dist / 250)) * 80)
-                line_color = (*accent, alpha)
+            if dist < 200:
+                alpha = int(max(0, (1 - dist / 200)) * 100)
+                # Mix accent and secondary colors for connections
+                if random.random() > 0.7:
+                    line_color = (*secondary, alpha // 2)
+                else:
+                    line_color = (*accent, alpha)
                 draw.line([(x1, y1), (x2, y2)], fill=line_color, width=1)
 
-    # Draw nodes (synapses)
+    # Draw nodes (synapses) — varied sizes
     for x, y in nodes:
-        r = random.randint(2, 6)
-        glow_r = r * 4
-        # Glow
+        r = random.randint(2, 8)
+        glow_r = r * 5
+        # Glow — brighter
         for gr in range(glow_r, r, -1):
-            alpha = int((1 - gr / glow_r) * 40)
+            alpha = int((1 - gr / glow_r) * 60)
             color = (*accent, alpha)
             draw.ellipse([x - gr, y - gr, x + gr, y + gr], fill=color)
-        # Core
-        draw.ellipse([x - r, y - r, x + r, y + r], fill=(*accent, 200))
+        # Core — bright
+        core_alpha = random.randint(180, 255)
+        draw.ellipse([x - r, y - r, x + r, y + r], fill=(*accent, core_alpha))
 
-    # Add a central brain-like circular structure
-    cx, cy = width // 2 + random.randint(-100, 100), height // 2 + random.randint(-50, 50)
-    for ring in range(3):
-        radius = 120 + ring * 50
-        alpha = 40 - ring * 10
-        for angle in range(0, 360, 3):
+    # Add a central brain-like circular structure with more rings
+    cx, cy = width // 2 + random.randint(-80, 80), height // 2 + random.randint(-40, 40)
+    for ring in range(5):
+        radius = 80 + ring * 45
+        alpha = 50 - ring * 8
+        for angle in range(0, 360, 2):
             rad = math.radians(angle)
-            wobble = random.uniform(0.9, 1.1)
+            wobble = random.uniform(0.85, 1.15)
             px = cx + int(radius * wobble * math.cos(rad))
-            py = cy + int(radius * wobble * math.sin(rad) * 0.7)  # Elliptical
-            dot_r = 1
+            py = cy + int(radius * wobble * math.sin(rad) * 0.65)
+            dot_r = random.choice([1, 1, 1, 2])
             draw.ellipse([px - dot_r, py - dot_r, px + dot_r, py + dot_r],
                          fill=(*secondary, alpha))
 
-    # Light blur for slight softness (keep it crisp)
+    # Cross-connections through the center (brain hemisphere look)
+    for _ in range(15):
+        angle = random.uniform(0, math.pi * 2)
+        r1 = random.randint(60, 200)
+        r2 = random.randint(60, 200)
+        x1 = cx + int(r1 * math.cos(angle))
+        y1 = cy + int(r1 * math.sin(angle) * 0.65)
+        x2 = cx + int(r2 * math.cos(angle + math.pi + random.uniform(-0.5, 0.5)))
+        y2 = cy + int(r2 * math.sin(angle + math.pi + random.uniform(-0.5, 0.5)) * 0.65)
+        draw.line([(x1, y1), (x2, y2)], fill=(*accent, 30), width=1)
+
+    # Light blur for slight softness
     img = img.filter(ImageFilter.GaussianBlur(radius=0.5))
 
-    # Add some bright accent particles
+    # Add bright accent particles — more of them
     particle_layer = Image.new("RGBA", size, (0, 0, 0, 0))
     pdraw = ImageDraw.Draw(particle_layer)
-    for _ in range(30):
+    for _ in range(60):
         px = random.randint(0, width)
         py = random.randint(0, height)
-        pr = random.randint(1, 3)
-        pdraw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(*secondary, 150))
+        pr = random.randint(1, 4)
+        color = secondary if random.random() > 0.5 else accent
+        pdraw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(*color, 180))
 
-    particle_layer = particle_layer.filter(ImageFilter.GaussianBlur(radius=2))
+    # A few larger glowing dots as focal points
+    for _ in range(8):
+        px = random.randint(width // 4, width * 3 // 4)
+        py = random.randint(height // 4, height * 3 // 4)
+        for gr in range(20, 0, -2):
+            alpha = int((1 - gr / 20) * 30)
+            pdraw.ellipse([px - gr, py - gr, px + gr, py + gr], fill=(*secondary, alpha))
+
+    particle_layer = particle_layer.filter(ImageFilter.GaussianBlur(radius=1.5))
     img = Image.alpha_composite(img, particle_layer)
 
     return img
