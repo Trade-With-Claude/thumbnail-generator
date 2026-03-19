@@ -13,10 +13,11 @@ def render_thumbnail(
     theme: str | None = None,
     background: str | None = None,
     seed: int | None = None,
+    ai_background: bool = False,
 ) -> Path:
     """Render a thumbnail with theme background, text effects, vignette, and gradient.
 
-    Pipeline: dark canvas → theme/background → gradient overlay → vignette → text
+    Pipeline: dark canvas → AI/theme/custom background → gradient overlay → vignette → text
     """
     from thumbgen.text import draw_title
     from thumbgen.effects import apply_vignette, apply_gradient_overlay
@@ -38,8 +39,17 @@ def render_thumbnail(
     bg_color = _hex_to_rgb(preset["background_tint"])
     img = Image.new("RGB", (width, height), bg_color)
 
-    # 2. Apply theme or custom background
-    if background:
+    # 2. Apply background (AI-generated, custom image, or procedural theme)
+    if ai_background:
+        from thumbgen.ai_background import generate_ai_background
+        bg_img = generate_ai_background(
+            title=title,
+            preset_name=preset_name,
+            theme=theme or "brain",
+            size=(width, height),
+        )
+        img = blend_background(img, bg_img, opacity=0.85)
+    elif background:
         bg_img = load_custom_background(background, (width, height))
         img = blend_background(img, bg_img, opacity=0.7)
     elif theme:
