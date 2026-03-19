@@ -1,10 +1,14 @@
 # V1 State
 
 ## Status
-initialized
+phase_complete
 
 ## Phase
-none
+2
+
+## Phases Completed
+- Phase 1: Foundation (3/3 ACs passed)
+- Phase 2: Text & Effects (3/3 ACs passed)
 
 ## Next Action
-Fill in `.bolt/v1/IDEA.md`, then run `/bolt:discover`
+Run `/bolt:plan 3` to plan the next phase (Themes & Backgrounds).

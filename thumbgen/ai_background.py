@@ -1,6 +1,8 @@
 import base64
+import hashlib
 import io
 import os
+import random
 from pathlib import Path
 
 import requests
@@ -12,6 +14,9 @@ load_dotenv()
 
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "")
 TOGETHER_URL = "https://api.together.xyz/v1/images/generations"
+
+# Cache directory for AI-generated backgrounds
+CACHE_DIR = Path(__file__).parent.parent / "themes" / "ai_cache"
 
 
 # Prompt templates per preset
@@ -36,16 +41,20 @@ PROMPT_TEMPLATES = {
 # Subject variations based on theme
 SUBJECTS = {
     "brain": [
-        "human brain silhouette with neural pathways",
-        "side profile human head with visible brain and synapses",
-        "glowing brain with electric neural connections",
-        "human mind visualization with brain waves",
+        "human brain silhouette made of glowing neural network nodes and connections",
+        "side profile human head with visible brain made of interconnected glowing dots and lines",
+        "glowing brain with dense network of synaptic connections and electric pulses",
+        "human mind visualization with intricate web of neural pathways and tiny bright nodes",
+        "brain composed of thousands of connected glowing dots forming neural network pattern",
+        "wireframe brain structure with pulsing network connections between nodes",
     ],
     "abstract": [
-        "cosmic nebula with flowing energy particles",
-        "abstract fractal geometry with light streams",
-        "aurora borealis over dark landscape",
-        "sacred geometry mandala with light rays",
+        "vast network of interconnected glowing nodes floating in space",
+        "cosmic nebula with flowing energy particles and network connections",
+        "abstract digital network grid with glowing intersection points",
+        "sacred geometry mandala with interconnected light nodes",
+        "deep space scene with constellation-like network of bright connected dots",
+        "flowing particle network with organic connections and light trails",
     ],
 }
 
@@ -55,19 +64,10 @@ def generate_ai_background(
     preset_name: str = "focus",
     theme: str = "brain",
     size: tuple[int, int] = (1280, 720),
-    save_path: str | Path | None = None,
 ) -> Image.Image:
     """Generate a thumbnail background using Together.ai's Flux model.
 
-    Args:
-        title: Video title (used to inform the prompt)
-        preset_name: Color preset (focus/sleep/meditation)
-        theme: Visual theme (brain/abstract)
-        size: Output size
-        save_path: Optional path to cache the generated image
-
-    Returns:
-        PIL Image ready to be used as background
+    Generated images are cached in themes/ai_cache/ so they can be reused.
     """
     if not TOGETHER_API_KEY:
         raise ValueError(
@@ -76,7 +76,6 @@ def generate_ai_background(
         )
 
     # Build prompt
-    import random
     subjects = SUBJECTS.get(theme, SUBJECTS["brain"])
     subject = random.choice(subjects)
     template = PROMPT_TEMPLATES.get(preset_name, PROMPT_TEMPLATES["focus"])
@@ -84,6 +83,12 @@ def generate_ai_background(
 
     # Add title context to the prompt (without putting text in the image)
     prompt += f", inspired by the concept of {title.lower()}"
+
+    # Generate a cache filename from the prompt
+    prompt_hash = hashlib.md5(prompt.encode()).hexdigest()[:10]
+    safe_title = "".join(c if c.isalnum() else "_" for c in title.lower())[:30]
+    cache_filename = f"{safe_title}_{preset_name}_{theme}_{prompt_hash}.png"
+    cache_path = CACHE_DIR / cache_filename
 
     # Call Together.ai API
     response = requests.post(
@@ -118,10 +123,31 @@ def generate_ai_background(
     if img.size != size:
         img = img.resize(size, Image.LANCZOS)
 
-    # Cache the image if path provided
-    if save_path:
-        save_path = Path(save_path)
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(save_path, "PNG")
+    # Always cache the generated background
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    img.save(cache_path, "PNG")
 
     return img
+
+
+def list_cached_backgrounds() -> list[Path]:
+    """List all cached AI-generated backgrounds."""
+    if not CACHE_DIR.exists():
+        return []
+    return sorted(CACHE_DIR.glob("*.png"))
+
+
+def get_cached_background(preset_name: str = None, theme: str = None) -> Image.Image | None:
+    """Get a random cached background, optionally filtered by preset/theme."""
+    cached = list_cached_backgrounds()
+    if not cached:
+        return None
+
+    # Filter by preset/theme if specified
+    if preset_name:
+        cached = [p for p in cached if preset_name in p.name] or cached
+    if theme:
+        cached = [p for p in cached if theme in p.name] or cached
+
+    path = random.choice(cached)
+    return Image.open(path)
