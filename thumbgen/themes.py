@@ -119,18 +119,16 @@ def _generate_brain_theme(
                     line_color = (*accent, alpha)
                 draw.line([(x1, y1), (x2, y2)], fill=line_color, width=1)
 
-    # Draw nodes (synapses) — varied sizes
+    # Draw nodes as small pinpoints (not big dots)
     for x, y in nodes:
-        r = random.randint(2, 8)
-        glow_r = r * 5
-        # Glow — brighter
+        r = random.choice([1, 1, 1, 1, 2, 2])
+        # Small subtle glow
+        glow_r = r * 3
         for gr in range(glow_r, r, -1):
-            alpha = int((1 - gr / glow_r) * 60)
-            color = (*accent, alpha)
-            draw.ellipse([x - gr, y - gr, x + gr, y + gr], fill=color)
-        # Core — bright
-        core_alpha = random.randint(180, 255)
-        draw.ellipse([x - r, y - r, x + r, y + r], fill=(*accent, core_alpha))
+            alpha = int((1 - gr / glow_r) * 40)
+            draw.ellipse([x - gr, y - gr, x + gr, y + gr], fill=(*accent, alpha))
+        # Tiny bright core
+        draw.ellipse([x - r, y - r, x + r, y + r], fill=(*accent, 220))
 
     # Add a central brain-like circular structure with more rings
     cx, cy = width // 2 + random.randint(-80, 80), height // 2 + random.randint(-40, 40)
@@ -160,22 +158,22 @@ def _generate_brain_theme(
     # Light blur for slight softness
     img = img.filter(ImageFilter.GaussianBlur(radius=0.5))
 
-    # Add bright accent particles — more of them
+    # Scattered fine particles
     particle_layer = Image.new("RGBA", size, (0, 0, 0, 0))
     pdraw = ImageDraw.Draw(particle_layer)
-    for _ in range(60):
+    for _ in range(80):
         px = random.randint(0, width)
         py = random.randint(0, height)
-        pr = random.randint(1, 4)
+        pr = random.choice([1, 1, 1, 2])
         color = secondary if random.random() > 0.5 else accent
-        pdraw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(*color, 180))
+        pdraw.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(*color, 140))
 
-    # A few larger glowing dots as focal points
-    for _ in range(8):
+    # Subtle glow spots (not dots, just soft light)
+    for _ in range(5):
         px = random.randint(width // 4, width * 3 // 4)
         py = random.randint(height // 4, height * 3 // 4)
-        for gr in range(20, 0, -2):
-            alpha = int((1 - gr / 20) * 30)
+        for gr in range(15, 0, -2):
+            alpha = int((1 - gr / 15) * 15)
             pdraw.ellipse([px - gr, py - gr, px + gr, py + gr], fill=(*secondary, alpha))
 
     particle_layer = particle_layer.filter(ImageFilter.GaussianBlur(radius=1.5))
