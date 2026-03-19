@@ -82,9 +82,17 @@ def render_thumbnail(
 
     text_height = bbox[3] - bbox[1]
 
-    # Center position (shifted up slightly from dead center)
-    x = (width - text_width) // 2
-    y = (height - text_height) // 2 - 40
+    # Position based on layout style
+    layout_style = layout_cfg.get("text_position", "center")
+    if layout_style == "left":
+        x = margin
+        y = (height - text_height) // 2 - 20
+    elif layout_style == "upper-center":
+        x = (width - text_width) // 2
+        y = height // 4 - text_height // 2
+    else:  # center
+        x = (width - text_width) // 2
+        y = (height - text_height) // 2 - 40
 
     # 5. Draw text with effects (shadow → glow → main text)
     img = draw_title(img, text, font, (x, y), config, preset)
@@ -95,6 +103,50 @@ def render_thumbnail(
     img.save(output_path, "PNG")
 
     return output_path
+
+
+def render_variations(
+    title: str,
+    preset_name: str = "focus",
+    output_dir: str | Path = "output",
+    config: dict | None = None,
+    theme: str | None = None,
+    background: str | None = None,
+    count: int = 3,
+) -> list[Path]:
+    """Generate multiple thumbnail variations with different layouts and seeds.
+
+    Each variation uses a different text position and random seed for the theme.
+    """
+    import copy
+
+    if config is None:
+        config = load_brand_config()
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    layouts = ["center", "left", "upper-center"]
+    paths = []
+
+    for i in range(min(count, len(layouts))):
+        # Create a config variant with different layout
+        var_config = copy.deepcopy(config)
+        var_config["layout"]["text_position"] = layouts[i]
+
+        filename = f"thumb_{i + 1:02d}_{layouts[i]}.png"
+        path = render_thumbnail(
+            title=title,
+            preset_name=preset_name,
+            output_path=output_dir / filename,
+            config=var_config,
+            theme=theme,
+            background=background,
+            seed=i * 37 + 7,  # Different seed per variation
+        )
+        paths.append(path)
+
+    return paths
 
 
 def _hex_to_rgb(hex_color: str) -> tuple:
