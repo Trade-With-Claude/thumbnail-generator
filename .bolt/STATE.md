@@ -6,7 +6,7 @@ v1
 ## Version History
 | Version | Status | Git Tag |
 |---------|--------|---------|
-| v1 | discovery_complete | — |
+| v1 | COMPLETE | — |
 
 ## Next Action
-Run `/bolt:research` or skip to `/bolt:roadmap`
+V1 complete. Run `/bolt:next` to start V2, or enjoy using the app!
