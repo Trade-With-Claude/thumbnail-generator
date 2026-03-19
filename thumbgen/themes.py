@@ -127,8 +127,8 @@ def _generate_brain_theme(
             draw.ellipse([px - dot_r, py - dot_r, px + dot_r, py + dot_r],
                          fill=(*secondary, alpha))
 
-    # Soft blur for dreaminess
-    img = img.filter(ImageFilter.GaussianBlur(radius=1.5))
+    # Light blur for slight softness (keep it crisp)
+    img = img.filter(ImageFilter.GaussianBlur(radius=0.5))
 
     # Add some bright accent particles
     particle_layer = Image.new("RGBA", size, (0, 0, 0, 0))
@@ -183,8 +183,8 @@ def _generate_abstract_theme(
                 x_end = min(width, x_start + random.randint(400, width))
                 draw.line([(x_start, y), (x_end, y)], fill=(*color, alpha))
 
-    # Soft blur for smooth aurora effect
-    img = img.filter(ImageFilter.GaussianBlur(radius=8))
+    # Light blur for smooth aurora effect (reduced for crispness)
+    img = img.filter(ImageFilter.GaussianBlur(radius=3))
 
     # Floating particles / stars
     particle_layer = Image.new("RGBA", size, (0, 0, 0, 0))

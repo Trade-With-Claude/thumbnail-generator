@@ -1,9 +1,10 @@
 {
   "font": {
-    "family": "Montserrat-Bold",
+    "family": "BebasNeue-Regular",
+    "subtitle_family": "Montserrat-Bold",
     "style": "uppercase",
-    "primary_size": 90,
-    "subtitle_size": 40,
+    "primary_size": 120,
+    "subtitle_size": 45,
     "color": "#FFFFFF",
     "subtitle_color": "#CCCCCC"
   },

@@ -104,25 +104,37 @@ def _hex_to_rgb(hex_color: str) -> tuple:
 
 
 def _load_font(family: str, size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    """Try to load a font by family name, fall back to default."""
+    """Try to load a font by family name, fall back to bundled fonts."""
+    # Project fonts directory
+    project_root = Path(__file__).parent.parent
+    fonts_dir = project_root / "fonts"
+
+    # Try exact family name in fonts/
     font_paths = [
-        f"fonts/{family}.ttf",
-        f"fonts/{family}.otf",
-        f"/System/Library/Fonts/{family}.ttf",
-        f"/System/Library/Fonts/Supplemental/{family}.ttf",
+        fonts_dir / f"{family}.ttf",
+        fonts_dir / f"{family}.otf",
+        Path(f"/System/Library/Fonts/{family}.ttf"),
+        Path(f"/System/Library/Fonts/Supplemental/{family}.ttf"),
     ]
 
     for path in font_paths:
         try:
-            return ImageFont.truetype(path, size)
+            return ImageFont.truetype(str(path), size)
         except (OSError, IOError):
             continue
 
+    # Try system font by name
     try:
         return ImageFont.truetype(family, size)
     except (OSError, IOError):
         pass
 
+    # Fall back to bundled Bebas Neue (our primary font)
+    bebas = fonts_dir / "BebasNeue-Regular.ttf"
+    if bebas.exists():
+        return ImageFont.truetype(str(bebas), size)
+
+    # Last resort: Pillow default
     try:
         return ImageFont.load_default(size=size)
     except TypeError:
